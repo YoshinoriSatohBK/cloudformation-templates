@@ -1,12 +1,14 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Build and push docker image to ECR from github repositoty.
+Description: Build and push docker image to ECR from github Repository.
 
 Parameters:
   Env:
     Type: String
-  Repo:
+  CodeRepository:
     Type: String
   Branch:
+    Type: String
+  ImageRegistry:
     Type: String
   Owner:
     Type: String
@@ -71,7 +73,7 @@ Resources:
                 Version: 1
               Configuration:
                 Owner: !Ref Owner
-                Repo: !Ref Repo
+                Repo: !Ref CodeRepository
                 Branch: !Ref Branch
                 OAuthToken: !Ref OAuthToken
                 PollForSourceChanges: true
@@ -114,3 +116,9 @@ Resources:
                   - "*"
                 Action:
                   - iam:PassRole
+
+  # ---------- ECR Repository ----------
+  ECRRepository:
+    Type: AWS::ECR::Repository
+    Properties:
+      RepositoryName: !Ref ImageRegistry
