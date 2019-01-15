@@ -1,0 +1,95 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS Batch compute environment.
+
+Parameters:
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Subnet id list for EC2 instance.
+  SecurityGroupIds:
+    Type: List<AWS::EC2::SecurityGroup::Id>
+    Description: Security group id list for EC2 instance.
+  EnvironmentVariable:
+    Type: String
+    Description: Environment variable
+  EnvironmentVariableSecure:
+    Type: String
+    NoEcho: true
+    Description: Environment variable secure
+  Image:
+    Type: String
+    Description: Docker image repository. See detail - https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-properties-batch-jobdefinition-containerproperties.html?shortFooter=true#cfn-batch-jobdefinition-containerproperties-image
+
+Resources:
+  # ---------- ComputeEnvironment ----------
+  ComputeEnvironment:
+    Type: AWS::Batch::ComputeEnvironment
+    Properties:
+      Type: MANAGED
+      ServiceRole: !Ref ServiceRole
+      State: ENABLED
+      ComputeResources:
+        Subnets: !Ref SubnetIds
+        SecurityGroupIds: !Ref SecurityGroupIds
+        Type: EC2
+        MinvCpus: 0
+        MaxvCpus: 2
+        InstanceRole: !Ref InstanceProfile
+        InstanceTypes:
+          - m5.large
+        Tags: { "Name": "AWS Batch Instance" }
+
+  ServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: batch.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSBatchServiceRole
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ec2.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonEC2ContainerServiceforEC2Role
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref InstanceRole
+
+  # ---------- JobDefinition ----------
+  JobDefinition:
+    Type: AWS::Batch::JobDefinition
+    Properties:
+      Type: container
+      ContainerProperties:
+        Memory: 256
+        Environment:
+          - Name: ENVIRONMENT_VARIABLE
+            Value: !Ref EnvironmentVariable
+          - Name: ENVIRONMENT_VARIABLE_SECURE
+            Value: !Ref EnvironmentVariableSecure
+        Vcpus: 1
+        Image: !Ref Image
+
+  # ---------- JobDefinition ----------
+  JobQueue:
+    Type: AWS::Batch::JobQueue
+    Properties:
+      ComputeEnvironmentOrder:
+        - ComputeEnvironment: !Ref ComputeEnvironment
+          Order: 1
+      Priority: 1
