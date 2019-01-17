@@ -76,6 +76,7 @@ Resources:
     Properties:
       Type: container
       ContainerProperties:
+        Image: !Ref Image
         Memory: 256
         Environment:
           - Name: ENVIRONMENT_VARIABLE
@@ -83,7 +84,18 @@ Resources:
           - Name: ENVIRONMENT_VARIABLE_SECURE
             Value: !Ref EnvironmentVariableSecure
         Vcpus: 1
-        Image: !Ref Image
+        JobRoleArn: !GetAtt JobRole.Arn
+
+  JobRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+            Action: sts:AssumeRole
 
   # ---------- JobDefinition ----------
   JobQueue:
