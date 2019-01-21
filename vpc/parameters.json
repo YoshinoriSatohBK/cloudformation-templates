@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "VpcCidrBlock",
+    "ParameterValue": "10.0.0.0/16"
+  },
+  {
+    "ParameterKey": "PublicSubnetACidrBlock",
+    "ParameterValue": "10.0.11.0/24"
+  },
+  {
+    "ParameterKey": "PublicSubnetCCidrBlock",
+    "ParameterValue": "10.0.21.0/24"
+  }
+]
